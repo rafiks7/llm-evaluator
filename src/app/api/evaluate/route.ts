@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         const simulatedScore = parseFloat((Math.random() * 10).toFixed(2));
         const response = chatCompletion.choices[0].message.content;
 
-        console.log("response", response);
+        console.log("response:", response);
 
         return {
           model,

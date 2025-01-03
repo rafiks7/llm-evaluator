@@ -105,25 +105,27 @@ export default function Home() {
         </button>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-xl font-bold text-amber-500 mb-4">Results</h2>
-        <div className="flex flex-wrap gap-4">
-          {results.map(({ model, output, score }, index) => (
-            <div
-              key={index}
-              className="border border-teal-300 rounded p-4 text-black bg-gray-50 flex-1 min-w-[250px] max-w-[500px]" // Adapts to content width, with min and max width
-            >
-              <p>
-                <strong>Model:</strong> {model}
-              </p>
-              <p>
-                <strong>Output:</strong> {output}
-              </p>
-              <p>
-                <strong>Score:</strong> {score}
-              </p>
-            </div>
-          ))}
+      <div className="w-full mt-8">
+        <div className="flex-1">
+          <h2 className="text-xl font-bold text-amber-500 mb-4">Results</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {results.map(({ model, output, score }, index) => (
+              <div
+                key={index}
+                className="border border-teal-300 rounded p-4 text-black bg-gray-50 overflow-hidden"
+              >
+                <p>
+                  <strong>Model:</strong> {model}
+                </p>
+                <p>
+                  <strong>Output:</strong> {output}
+                </p>
+                <p>
+                  <strong>Score:</strong> {score}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
