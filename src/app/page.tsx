@@ -1,101 +1,113 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [userMessage, setUserMessage] = useState("");
+  const [output, setOutput] = useState("");
+  const [score, setScore] = useState<number | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleEvaluate = async () => {
+    try {
+      const payload = {
+        systemPrompt,
+        selectedModels,
+        userMessage,
+      };
+
+      const response = await fetch("/api/evaluate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setOutput(data.output);
+      setScore(data.score);
+    } catch (error) {
+      console.error("Failed to evaluate:", error);
+      setOutput("Error occurred while evaluating.");
+      setScore(0);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center bg-teal-600 p-6">
+      <h1 className="text-2xl font-bold text-amber-400 mb-4">LLM Evaluation</h1>
+
+      <div className="w-full max-w-lg bg-white p-6 rounded shadow-md border border-teal-200">
+        <div className="mb-4">
+          <label className="block text-teal-800 font-medium mb-2">
+            System Prompt
+          </label>
+          <textarea
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            placeholder="Enter the system prompt"
+            className="w-full border-teal-300 rounded text-black px-3 py-2 focus:ring focus:ring-amber-300"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="mb-4">
+          <label className="block text-teal-800 font-medium mb-2">
+            Select Model
+          </label>
+          <select
+            multiple
+            value={selectedModels}
+            onChange={(e) =>
+              setSelectedModels(
+                Array.from(e.target.selectedOptions, (option) => option.value)
+              )
+            }
+            className="w-full border-teal-300 text-black rounded px-3 py-2 focus:ring focus:ring-amber-300"
+          >
+            <option value="gemma2-9b-it">gemma2-9b-it</option>
+            <option value="llama-3.3-70b-versatile">
+              llama-3.3-70b-versatile
+            </option>
+            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+            <option value="llama3-8b-8192">llama3-8b-8192</option>
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-teal-800 font-medium mb-2">
+            User Test Message
+          </label>
+          <textarea
+            value={userMessage}
+            onChange={(e) => setUserMessage(e.target.value)}
+            placeholder="Enter test message"
+            className="w-full border-teal-300 text-black rounded px-3 py-2 focus:ring focus:ring-amber-300"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+
+        <button
+          onClick={handleEvaluate}
+          className="w-full bg-amber-500 text-white py-2 rounded hover:bg-amber-600 transition"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Evaluate
+        </button>
+      </div>
+
+      {output && (
+        <div className="w-full max-w-lg mt-6 bg-white p-6 rounded shadow-md border border-teal-200">
+          <h2 className="text-lg font-bold text-teal-700 mb-2">Output</h2>
+          <p className="text-black">{output}</p>
+          <h3 className="text-lg font-bold text-teal-700 mt-4">Score</h3>
+          <p className="text-black">{score}</p>
+        </div>
+      )}
     </div>
   );
 }
