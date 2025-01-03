@@ -6,8 +6,9 @@ export default function Home() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [userMessage, setUserMessage] = useState("");
-  const [output, setOutput] = useState("");
-  const [score, setScore] = useState<number | null>(null);
+  const [results, setResults] = useState<
+    { model: string; output: string; score: number }[]
+  >([]);
 
   const handleEvaluate = async () => {
     try {
@@ -31,12 +32,16 @@ export default function Home() {
 
       const data = await response.json();
 
-      setOutput(data.output);
-      setScore(data.score);
+      setResults(data.results);
     } catch (error) {
       console.error("Failed to evaluate:", error);
-      setOutput("Error occurred while evaluating.");
-      setScore(0);
+      setResults([
+        {
+          model: "Error",
+          output: "Error occurred while evaluating.",
+          score: 0,
+        },
+      ]);
     }
   };
 
@@ -100,14 +105,27 @@ export default function Home() {
         </button>
       </div>
 
-      {output && (
-        <div className="w-full max-w-lg mt-6 bg-white p-6 rounded shadow-md border border-teal-200">
-          <h2 className="text-lg font-bold text-teal-700 mb-2">Output</h2>
-          <p className="text-black">{output}</p>
-          <h3 className="text-lg font-bold text-teal-700 mt-4">Score</h3>
-          <p className="text-black">{score}</p>
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-amber-500 mb-4">Results</h2>
+        <div className="flex flex-wrap gap-4">
+          {results.map(({ model, output, score }, index) => (
+            <div
+              key={index}
+              className="border border-teal-300 rounded p-4 text-black bg-gray-50 flex-1 min-w-[250px] max-w-[500px]" // Adapts to content width, with min and max width
+            >
+              <p>
+                <strong>Model:</strong> {model}
+              </p>
+              <p>
+                <strong>Output:</strong> {output}
+              </p>
+              <p>
+                <strong>Score:</strong> {score}
+              </p>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

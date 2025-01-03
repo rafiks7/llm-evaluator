@@ -28,27 +28,34 @@ export async function POST(req: Request) {
     }
     console.log("selectedModels", selectedModels);
 
-    const response = "This is a simulated response.";
+    // Simulate responses for each selected model
+    const results = await Promise.all(
+      selectedModels.map(async (model) => {
+        // const simulatedResponse = Simulated response for "${userMessage}" using model "${model}";
+        const chatCompletion = await client.chat.completions.create({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+          model: model,
+        });
 
-    // const chatCompletion = await client.chat.completions.create({
-    //   messages: [
-    //     { role: "system", content: systemPrompt },
-    //     { role: "user", content: userMessage },
-    //   ],
-    //   model: selectedModel,
-    // });
+        const simulatedScore = parseFloat((Math.random() * 10).toFixed(2));
+        const response = chatCompletion.choices[0].message.content;
 
-    // const response = chatCompletion.choices[0].message.content;
+        console.log("response", response);
 
-    const simulatedScore = parseFloat((Math.random() * 10).toFixed(2));
-
-    return NextResponse.json(
-      {
-        output: response,
-        score: simulatedScore,
-      },
-      { status: 200 }
+        return {
+          model,
+          output: response,
+          score: simulatedScore,
+        };
+      })
     );
+
+    console.log("results", results);
+
+    return NextResponse.json({ results }, { status: 200 });
   } catch (error) {
     console.error("Error processing request:", error);
     return NextResponse.json(
