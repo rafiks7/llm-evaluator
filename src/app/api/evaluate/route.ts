@@ -33,7 +33,6 @@ export async function POST(req: Request) {
     // Simulate responses for each selected model
     const generatedResponses = await Promise.all(
       selectedModels.map(async (model) => {
-        // const simulatedResponse = Simulated response for "${userMessage}" using model "${model}";
         const chatCompletion = await groqClient.chat.completions.create({
           messages: [
             { role: "system", content: systemPrompt },
@@ -80,7 +79,7 @@ export async function POST(req: Request) {
           `;
 
         const judgeCompletion = await openaiClient.chat.completions.create({
-          model: "gpt-4",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: judgePrompt },
             {
