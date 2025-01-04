@@ -24,4 +24,5 @@ async def evaluation_score(request: EvaluationModel):
     criteria="Coherence - the collective quality of all sentences in the actual output",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
+    coherence_metric.measure(test_case)
     return Response(coherence_metric.score)
