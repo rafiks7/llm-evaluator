@@ -1,13 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function Home() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [userMessage, setUserMessage] = useState("");
   const [results, setResults] = useState<
-    { model: string; output: string; score: number }[]
+    {
+      model: string;
+      output: string;
+      scores: {
+        relevance: number;
+        accuracy: number;
+        completeness: number;
+      };
+      explanation: string;
+    }[]
   >([]);
 
   const handleEvaluate = async () => {
@@ -32,14 +41,19 @@ export default function Home() {
 
       const data = await response.json();
 
-      setResults(data.results);
+      setResults(data);
     } catch (error) {
       console.error("Failed to evaluate:", error);
       setResults([
         {
           model: "Error",
           output: "Error occurred while evaluating.",
-          score: 0,
+          scores: {
+            relevance: 0,
+            accuracy: 0,
+            completeness: 0,
+          },
+          explanation: "Failed to evaluate the models.",
         },
       ]);
     }
@@ -108,7 +122,7 @@ export default function Home() {
       <div className="mt-8">
         <h2 className="text-xl font-bold text-amber-500 mb-4">Results</h2>
         <div className="flex flex-wrap gap-4">
-          {results.map(({ model, output, score }, index) => (
+          {results.map(({ model, output, scores, explanation }, index) => (
             <div
               key={index}
               className="border border-teal-300 rounded p-4 text-black bg-gray-50 flex-1 min-w-[250px] max-w-[500px]" // Adapts to content width, with min and max width
@@ -119,8 +133,22 @@ export default function Home() {
               <p>
                 <strong>Output:</strong> {output}
               </p>
-              <p>
-                <strong>Score:</strong> {score}
+              <div className="mt-2">
+                <p className="font-semibold">Scores:</p>
+                <ul className="ml-4 list-disc">
+                  <li>
+                    <strong>Relevance:</strong> {scores.relevance}
+                  </li>
+                  <li>
+                    <strong>Accuracy:</strong> {scores.accuracy}
+                  </li>
+                  <li>
+                    <strong>Completeness:</strong> {scores.completeness}
+                  </li>
+                </ul>
+              </div>
+              <p className="mt-2">
+                <strong>Explanation:</strong> {explanation}
               </p>
             </div>
           ))}
