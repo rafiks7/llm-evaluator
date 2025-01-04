@@ -6,6 +6,7 @@ export default function Home() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [userMessage, setUserMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<
     {
       model: string;
@@ -27,6 +28,7 @@ export default function Home() {
         userMessage,
       };
 
+      setIsLoading(true);
       const response = await fetch("/api/evaluate", {
         method: "POST",
         headers: {
@@ -42,6 +44,7 @@ export default function Home() {
       const data = await response.json();
 
       setResults(data);
+      setIsLoading(false);
     } catch (error) {
       console.error("Failed to evaluate:", error);
       setResults([
@@ -57,103 +60,175 @@ export default function Home() {
         },
       ]);
     }
+    setIsLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-teal-600 p-6">
-      <h1 className="text-2xl font-bold text-amber-400 mb-4">LLM Evaluation</h1>
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-r from-teal-500 to-cyan-500 p-4">
+      <h1 className="text-2xl font-extrabold text-white mb-6">
+        LLM Evaluation
+      </h1>
 
-      <div className="w-full max-w-lg bg-white p-6 rounded shadow-md border border-teal-200">
-        <div className="mb-4">
-          <label className="block text-teal-800 font-medium mb-2">
+      <div className="w-full max-w-xl bg-white p-6 rounded-xl shadow-lg border border-teal-200">
+        <div className="mb-6">
+          <label className="block text-teal-800 font-semibold mb-2 text-sm">
             System Prompt
           </label>
           <textarea
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             placeholder="Enter the system prompt"
-            className="w-full border-teal-300 rounded text-black px-3 py-2 focus:ring focus:ring-amber-300"
+            className="w-full border-2 border-teal-300 rounded-lg text-black px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-400 transition duration-200"
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-teal-800 font-medium mb-2">
-            Select Model
+        <div className="mb-6">
+          <label className="block text-teal-800 font-semibold mb-2 text-sm">
+            Select Model(s)
           </label>
-          <select
-            multiple
-            value={selectedModels}
-            onChange={(e) =>
-              setSelectedModels(
-                Array.from(e.target.selectedOptions, (option) => option.value)
-              )
-            }
-            className="w-full border-teal-300 text-black rounded px-3 py-2 focus:ring focus:ring-amber-300"
-          >
-            <option value="gemma2-9b-it">gemma2-9b-it</option>
-            <option value="llama-3.3-70b-versatile">
-              llama-3.3-70b-versatile
-            </option>
-            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
-            <option value="llama3-8b-8192">llama3-8b-8192</option>
-          </select>
+          <div className="space-y-3 grid grid-cols-2">
+            {[
+              "gemma2-9b-it",
+              "llama-3.3-70b-versatile",
+              "llama-3.1-8b-instant",
+              "llama3-70b-8192",
+              "llama3-8b-8192",
+              "mixtral-8x7b-32768",
+            ].map((model) => (
+              <label
+                key={model}
+                className="flex items-center space-x-2 cursor-pointer text-sm"
+              >
+                <input
+                  type="checkbox"
+                  value={model}
+                  checked={selectedModels.includes(model)}
+                  onChange={(e) => {
+                    const newSelectedModels = e.target.checked
+                      ? selectedModels.length < 3
+                        ? [...selectedModels, model]
+                        : selectedModels
+                      : selectedModels.filter((item) => item !== model);
+                    setSelectedModels(newSelectedModels);
+                  }}
+                  className="h-4 w-4 border-2 border-teal-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition duration-150"
+                  disabled={
+                    selectedModels.length >= 3 &&
+                    !selectedModels.includes(model)
+                  }
+                />
+                <span className="text-teal-800 font-medium">{model}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-teal-800 font-medium mb-2">
+        <div className="mb-6">
+          <label className="block text-teal-800 font-semibold mb-2 text-sm">
             User Test Message
           </label>
           <textarea
             value={userMessage}
             onChange={(e) => setUserMessage(e.target.value)}
             placeholder="Enter test message"
-            className="w-full border-teal-300 text-black rounded px-3 py-2 focus:ring focus:ring-amber-300"
+            disabled={isLoading}
+            className="w-full border-2 border-teal-300 rounded-lg text-black px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-400 transition duration-200"
           />
         </div>
 
         <button
           onClick={handleEvaluate}
-          className="w-full bg-amber-500 text-white py-2 rounded hover:bg-amber-600 transition"
+          className="w-full bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 transition duration-200 flex justify-center items-center text-sm"
         >
-          Evaluate
+          {isLoading ? "Evaluating..." : "Evaluate"}
         </button>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-xl font-bold text-amber-500 mb-4">Results</h2>
-        <div className="flex flex-wrap gap-4">
-          {results.map(({ model, output, scores, explanation }, index) => (
-            <div
-              key={index}
-              className="border border-teal-300 rounded p-4 text-black bg-gray-50 flex-1 min-w-[250px] max-w-[500px]" // Adapts to content width, with min and max width
-            >
-              <p>
-                <strong>Model:</strong> {model}
-              </p>
-              <p>
-                <strong>Output:</strong> {output}
-              </p>
-              <div className="mt-2">
-                <p className="font-semibold">Scores:</p>
-                <ul className="ml-4 list-disc">
-                  <li>
-                    <strong>Relevance:</strong> {scores.relevance}
-                  </li>
-                  <li>
-                    <strong>Accuracy:</strong> {scores.accuracy}
-                  </li>
-                  <li>
-                    <strong>Completeness:</strong> {scores.completeness}
-                  </li>
-                </ul>
-              </div>
-              <p className="mt-2">
-                <strong>Explanation:</strong> {explanation}
-              </p>
-            </div>
-          ))}
+      {isLoading ? (
+        <div className="w-24 h-24 mt-20 border-8 border-t-8 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+      ) : (
+        <div className="mt-8 w-full max-w-7xl flex flex-col gap-8">
+          {results.length > 0 && (
+            <h2 className="text-2xl font-semibold text-white mt-6 text-center">
+              Results
+            </h2>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {results.map(({ model, output, scores, explanation }, index) => {
+              let modelColor;
+              switch (model) {
+                case "gemma2-9b-it":
+                  modelColor = "blue-600";
+                  break;
+                case "llama-3.3-70b-versatile":
+                  modelColor = "lime-600";
+                  break;
+                case "llama3-70b-8192":
+                  modelColor = "rose-600";
+                  break;
+                case "llama-3.1-8b-instant":
+                  modelColor = "yellow-600";
+                  break;
+                case "llama3-8b-8192":
+                  modelColor = "purple-600";
+                  break;
+                default:
+                  modelColor = "teal-600";
+              }
+
+              const getScoreColor = (score: number) => {
+                if (score >= 6) return "text-green-500";
+                if (score >= 3) return "text-yellow-500";
+                return "text-red-500";
+              };
+
+              return (
+                <div
+                  key={index}
+                  className="border-2 border-teal-300 rounded-lg p-6 text-white bg-teal-950 shadow-md hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <p
+                      className={`text-sm text-${modelColor} border-2 border-amber-400 rounded-full px-3 py-1`}
+                    >
+                      {model}
+                    </p>
+                  </div>
+
+                  <p className="font-bold text-amber-400 mt-2 text-sm">
+                    Output:
+                  </p>
+                  <div className="max-h-36 overflow-y-auto text-sm">
+                    <p>{output}</p>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="font-bold text-amber-400 text-sm">Scores:</p>
+                    <ul className="ml-4 list-disc text-sm">
+                      <li className={getScoreColor(scores.relevance)}>
+                        <strong>Relevance:</strong> {scores.relevance}
+                      </li>
+                      <li className={getScoreColor(scores.accuracy)}>
+                        <strong>Accuracy:</strong> {scores.accuracy}
+                      </li>
+                      <li className={getScoreColor(scores.completeness)}>
+                        <strong>Completeness:</strong> {scores.completeness}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <p className="mt-4 font-bold text-amber-400 text-sm">
+                    Explanation:
+                  </p>
+                  <div className="max-h-36 overflow-y-auto text-sm">
+                    <p>{explanation}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
