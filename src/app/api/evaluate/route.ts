@@ -55,7 +55,50 @@ export async function POST(req: Request) {
 
     console.log("results", results);
 
+<<<<<<< Updated upstream
     return NextResponse.json({ results }, { status: 200 });
+=======
+        const judgeCompletion = await openaiClient.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: judgePrompt },
+            {
+              role: "user",
+              content: output || "This model did not generate a response.",
+            },
+          ],
+        });
+
+        let judgment;
+        try {
+          if (judgeCompletion.choices[0].message.content) {
+            judgment = JSON.parse(judgeCompletion.choices[0].message.content);
+          }
+        } catch (error) {
+          console.error("Error parsing judge's response:", error);
+          judgment = {
+            relevance: 0,
+            accuracy: 0,
+            completeness: 0,
+            explanation: "Failed to parse the evaluation response.",
+          };
+        }
+
+        return {
+          model,
+          output,
+          scores: {
+            relevance: judgment.relevance,
+            accuracy: judgment.accuracy,
+            completeness: judgment.completeness,
+          },
+          explanation: judgment.explanation,
+        };
+      })
+    );
+
+    return NextResponse.json(judgedResults, { status: 200 });
+>>>>>>> Stashed changes
   } catch (error) {
     console.error("Error processing request:", error);
     return NextResponse.json(
